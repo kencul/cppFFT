@@ -1,8 +1,3 @@
-/*
-Implementation of the Cooley-Tukey algorithm for Fast Fourier Transform (FFT) in C++.
-REF: https://www.w3computing.com/articles/how-to-implement-a-fast-fourier-transform-fft-in-cpp/
-*/
-
 #include <iostream>
 #include <vector>
 #include <complex>
@@ -17,14 +12,20 @@ namespace fft {
     using Complex = complex<double>; 
     // Defining a type alias CArray for a vector of Complex numbers to simplify code readability.
     using CArray = vector<Complex>;
-
+    
     // Get PI value
     const double PI = acos(-1);
-
-    void fft(CArray &x) {
-        const size_t N = x.size();
+    
+    /*
+    Implementation of the Cooley-Tukey algorithm for Fast Fourier Transform (FFT) in C++.
+    REF: https://www.w3computing.com/articles/how-to-implement-a-fast-fourier-transform-fft-in-cpp/
+    */
+    /// @brief Perform Fast Fourier Transform (FFT) on a complex-valued array.
+    /// @param x Reference to the input/output array of complex numbers. Must be a length that is a power of 2.
+    void fft(CArray &buffer) {
+        const size_t N = buffer.size();
         if (N <= 1) return;
-
+        
         // Ensure N is a power of 2
         // The FFT algorithm requires the input size to be a power of two to function
         if (N > 1 && (N & (N - 1)) != 0) {
@@ -63,7 +64,7 @@ namespace fft {
             // j now represents the mirror image of i in binary form, so swap the values at indices i and j
             // Only do the swap if j is farther in the array than i to avoid swapping them back
             if (i < j) {
-                swap(x[i], x[j]);
+                swap(buffer[i], buffer[j]);
             }
         }
 
@@ -90,13 +91,13 @@ namespace fft {
                 for (size_t j = 0; j < len / 2; ++j) {
                     // Combine odd and even halfs
                     // Even component
-                    Complex u = x[i + j];
+                    Complex u = buffer[i + j];
                     // Apply twiddle factor to odd component
-                    Complex v = x[i + j + len / 2] * w;
+                    Complex v = buffer[i + j + len / 2] * w;
                     // Update the value at the current index with the sum of even and odd components
-                    x[i + j] = u + v;
+                    buffer[i + j] = u + v;
                     // Update the value at the index offset by len/2 with the symmetrical opposite
-                    x[i + j + len / 2] = u - v;
+                    buffer[i + j + len / 2] = u - v;
                     // Update the twiddle factor for the next position
                     w *= wlen;
                 }
@@ -104,14 +105,39 @@ namespace fft {
         }
     }
 
-    std::vector<Complex> fft(const std::vector<float>& x) {
+    /// @brief Perform Fast Fourier Transform (FFT) on a real-valued vector.
+    /// @param x Input vector of real numbers (floats). Must be a length that is a power of 2.
+    /// @return Vector of complex numbers representing the FFT result.
+    std::vector<Complex> fft(const std::vector<float>& buffer) {
         // Convert real-valued input to complex-valued array
-        CArray data(x.size());
-        transform(x.begin(), x.end(), data.begin(),
+        CArray data(buffer.size());
+        transform(buffer.begin(), buffer.end(), data.begin(),
                   [](float val) { return Complex(static_cast<double>(val), 0); });
         // Perform FFT
         fft(data);
         // Return the result as a vector of complex numbers
         return vector<Complex>(data.begin(), data.end());
+    }
+
+    // Convert FFT spectrum to magnitude
+    /// @brief Convert FFT spectrum to magnitude.
+    /// @param spectrum Input complex spectrum from FFT.
+    /// @return Vector of magnitudes corresponding to the input spectrum.
+    std::vector<double> magnitude(const CArray& spectrum) {
+        vector<double> mags(spectrum.size());
+        transform(spectrum.begin(), spectrum.end(), mags.begin(),
+                  [](const Complex& val) { return abs(val); });
+        return mags;
+    }
+
+    // Convert FFT spectrum to dB scale
+    /// @brief Convert FFT spectrum to dB scale.
+    /// @param spectrum Input complex spectrum from FFT.
+    /// @return Vector of magnitudes in dB corresponding to the input spectrum.
+    std::vector<double> power(const CArray& spectrum) {
+        std::vector<double> mags = magnitude(spectrum);
+        std::transform(mags.begin(), mags.end(), mags.begin(),
+                    [](double val) { return 20.0 * std::log10(val); });
+        return mags;
     }
 }
