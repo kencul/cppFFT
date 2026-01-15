@@ -1,4 +1,6 @@
 #include "fft.h"
+#include "plot.h"
+
 #include <iostream>
 #include <cmath>
 
@@ -9,9 +11,9 @@ using namespace std;
 int main() {
     // Parameters
     const int sampleRate = 44100;
-    const float frequency =  67.f;
+    const float frequency =  9900.f;
     const float dur = 10.f;
-    const int bufferSize = pow(2, 15); // must be power of 2
+    const int bufferSize = pow(2, 12); // must be power of 2
 
     size_t numSamples = static_cast<size_t>(sampleRate * dur);
 
@@ -33,6 +35,8 @@ int main() {
     if(maxDb != power.end()) {
         std::cout << format("Max bin at {} Hz at {} dB", freqAtMaxDb, *maxDb) << std::endl;
     }
+
+    plotFFT(freqScale, power);
 
     return 0;
 }

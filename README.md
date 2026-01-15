@@ -2,6 +2,8 @@
 
 ## Usage
 
+install [gnuplot](http://www.gnuplot.info/) for visualizations
+
 ```bash
 mkdir build
 cd build
