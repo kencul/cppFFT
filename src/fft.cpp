@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <iostream>
 #include <vector>
 #include <complex>
@@ -124,8 +125,9 @@ namespace fft {
     /// @param spectrum Input complex spectrum from FFT.
     /// @return Vector of magnitudes corresponding to the input spectrum.
     std::vector<double> magnitude(const CArray& spectrum) {
-        vector<double> mags(spectrum.size());
-        transform(spectrum.begin(), spectrum.end(), mags.begin(),
+        size_t n = spectrum.size();
+        vector<double> mags(n/2);
+        transform(spectrum.begin(), spectrum.begin() + n/2, mags.begin(),
                   [](const Complex& val) { return abs(val); });
         return mags;
     }
@@ -139,5 +141,35 @@ namespace fft {
         std::transform(mags.begin(), mags.end(), mags.begin(),
                     [](double val) { return 20.0 * std::log10(val); });
         return mags;
+    }
+
+    /// @brief Generate frequency scale for FFT bins.
+    /// @param fftSize Size of the FFT.
+    /// @param sampleRate Sampling rate of the original signal.
+    /// @return Vector of frequencies corresponding to each FFT bin.
+    std::vector<double> frequencyScale(size_t fftSize, int sampleRate) {
+        std::vector<double> freqScale(fftSize / 2);
+        double freqResolution = static_cast<double>(sampleRate) / static_cast<double>(fftSize);
+        
+        for (size_t i = 0; i < fftSize / 2; ++i) {
+            freqScale[i] = i * freqResolution;
+        }
+        
+        return freqScale;
+    }
+
+    /// @brief Apply Hanning window to input data.
+    /// @param input Input vector of input data.
+    /// @return Vector of windowed data (doubles).
+    std::vector<float> applyHanningWindow(const std::vector<float>& input) {
+        size_t N = input.size();
+        std::vector<float> windowedData(N);
+        
+        for (size_t n = 0; n < N; ++n) {
+            float w = 0.5 * (1 - cos((2 * PI * n) / (N - 1))); // Hanning window formula
+            windowedData[n] = input[n] * w;
+        }
+        
+        return windowedData;
     }
 }

@@ -9,9 +9,9 @@ using namespace std;
 int main() {
     // Parameters
     const int sampleRate = 44100;
-    const float frequency = 50.0f;
-    const float dur = 5.f;
-    const int bufferSize = 1024;
+    const float frequency =  67.f;
+    const float dur = 10.f;
+    const int bufferSize = pow(2, 15); // must be power of 2
 
     size_t numSamples = static_cast<size_t>(sampleRate * dur);
 
@@ -22,12 +22,17 @@ int main() {
         buffer[i] = sin(2.0f * M_PI * frequency * (static_cast<float>(i) / static_cast<float>(sampleRate)));
     }
 
-    // vector<float> realData = {1.0f, 2.0f, 3.0f, 2.0f};
+    buffer = fft::applyHanningWindow(buffer);
     fft::CArray result = fft::fft(buffer);
-    vector<double> mags = fft::magnitude(result);
+    vector<double> power = fft::power(result);
+    auto freqScale = fft::frequencyScale(bufferSize, sampleRate);
 
-    for (const auto& mag : mags) {
-        std::cout << mag << std::endl;
+    auto maxDb = max_element(power.begin(), power.end());
+    int index = maxDb - power.begin();
+    double freqAtMaxDb = freqScale[index];
+    if(maxDb != power.end()) {
+        std::cout << format("Max bin at {} Hz at {} dB", freqAtMaxDb, *maxDb) << std::endl;
     }
+
     return 0;
 }

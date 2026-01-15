@@ -26,6 +26,10 @@ namespace fft {
     std::vector<double> magnitude(const CArray& spectrum);
 
     std::vector<double> power(const CArray& spectrum);
+
+    std::vector<double> frequencyScale(size_t fftSize, int sampleRate);
+
+    std::vector<float> applyHanningWindow(const std::vector<float>& input);
 }
 
 #endif // FFT_H
